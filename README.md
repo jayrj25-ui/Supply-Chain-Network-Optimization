@@ -1,117 +1,132 @@
-# Supply Chain Resilience Optimizer
-### GNN + GRU · Disruption Simulation · LP Min-Cost Flow
+# 🚀 Supply Chain Resilience Optimizer
+
+### AI-Driven Pipeline using GNN + GRU · Disruption Simulation · LP Optimization
 
 ---
 
-## Overview
+## 📌 Overview
 
-This project builds an end-to-end pipeline to predict, disrupt, and re-optimise a supply chain network.
+Modern supply chains are highly vulnerable to disruptions such as factory shutdowns, port closures, and demand fluctuations.
+This project presents an **end-to-end intelligent system** that combines **Graph Neural Networks and Optimization techniques** to enhance supply chain resilience.
+
+🔹 Predict demand across the network
+🔹 Simulate real-world disruptions
+🔹 Optimally re-route supply at minimum cost
+
+---
+
+## 🧠 Methodology Pipeline
 
 ```
 Step 1: GNN (Graph + GRU)
-        ↓  Predict demand at each node
+        ↓  Demand Forecasting
 Step 2: Disruption Simulation
-        ↓  Remove nodes / edges
+        ↓  Network Stress Testing
 Step 3: Optimization (LP / Min-Cost Flow)
-        ↓  Re-route supply using solver
+        ↓  Cost-Optimal Re-routing
 ```
 
 ---
 
-## Pipeline
+## ⚙️ Key Components
 
-### Step 1 — Demand Forecasting (GNN + GRU)
-- Constructs a supply chain graph from node/edge CSVs
-- Normalises production & sales time-series per node
-- Two-layer Graph Convolutional Network aggregates neighbourhood features at each time step
-- GRU captures temporal dependencies across the sequence window
-- Outputs demand forecast for every node at the next time step
+### 🔹 Demand Forecasting (GNN + GRU)
 
-### Step 2 — Disruption Simulation
-- Randomly removes a configurable fraction of nodes (default 20 %)
-- Models real-world disruptions: factory shutdowns, port closures, natural disasters
-- Reports network metrics before and after (components, edges, resilience score)
-
-### Step 3 — LP Optimization (Min-Cost Flow)
-- Uses GNN demand predictions as supply/demand constraints
-- Formulates a **Minimum-Cost Flow** Linear Program with PuLP (CBC solver)
-- Finds the lowest-cost re-routing of supply across the surviving network
-- Outputs active flow routes and total flow volume
+* Models supply chain as a **graph structure**
+* Uses **2-layer GCN** for spatial dependency learning
+* Uses **GRU** to capture temporal demand patterns
+* Outputs **node-wise demand predictions**
 
 ---
 
-## Results
+### 🔹 Disruption Simulation
 
-| Metric | Value |
-|--------|-------|
-| RMSE   | *see run output* |
-| MAE    | *see run output* |
-| R²     | *see run output* |
-| LP Status | Optimal |
+* Simulates failures by removing nodes/edges
+* Represents:
 
----
-
-## Setup
-
-```bash
-# Clone
-git clone https://github.com/<your-username>/supply-chain-resilience.git
-cd supply-chain-resilience
-
-# Install dependencies
-pip install torch numpy pandas networkx scikit-learn pulp matplotlib
-
-# Place your dataset at ./data/ (mirror the Colab Drive structure)
-
-# Run
-python main.py
-```
+  * Factory shutdowns
+  * Logistics disruptions
+  * Infrastructure failures
+* Evaluates **network resilience metrics**
 
 ---
 
-## Dataset Structure
+### 🔹 Optimization (Min-Cost Flow LP)
 
-```
-data/
-├── Nodes/
-│   └── NodesIndex.csv
-├── Edges/
-│   └── EdgesIndex/
-│       └── Edges (Plant).csv
-└── Temporal Data/
-    └── Unit/
-        ├── Production_*.csv
-        └── Sales_*.csv
-```
+* Formulates a **Linear Programming model**
+* Uses **PuLP (CBC Solver)**
+* Ensures:
+
+  * Flow conservation
+  * Capacity constraints
+  * Minimum transportation cost
+* Outputs **optimal supply routing strategy**
 
 ---
 
-## File Structure
+## 📊 Results & Insights
+
+* ✔ Accurate demand forecasting using GNN+GRU
+* ✔ Successful disruption simulation (20% node removal)
+* ✔ Optimal re-routing achieved using LP solver
+* ✔ Demonstrates **resilient supply chain behavior under stress**
+
+| Metric    | Status              |
+| --------- | ------------------- |
+| RMSE      | Available in output |
+| MAE       | Available in output |
+| R²        | Available in output |
+| LP Solver | Optimal             |
+
+---
+
+---
+
+---
+
+## 🛠️ Tech Stack
+
+| Domain           | Tools             |
+| ---------------- | ----------------- |
+| Machine Learning | PyTorch           |
+| Graph Modeling   | NetworkX          |
+| Optimization     | PuLP (CBC Solver) |
+| Data Processing  | Pandas, NumPy     |
+| Evaluation       | Scikit-learn      |
+| Visualization    | Matplotlib        |
+
+---
+
+
+## 📂 Project Structure
 
 ```
-supply-chain-resilience/
-├── main.py          # Full pipeline (GNN → Disruption → LP)
+Supply-Chain-Network-Optimization/
+├── main.py
+├── requirements.txt
 ├── README.md
-└── requirements.txt
+├── report/
+│   └── supply_chain_report.docx
+├── demo/
+│   └── demo.html
 ```
 
 ---
 
-## Tech Stack
+## 📈 Future Improvements
 
-| Component | Library |
-|-----------|---------|
-| GNN + GRU | PyTorch |
-| Graph ops | NetworkX |
-| LP Solver | PuLP (CBC) |
-| Data      | pandas / NumPy |
-| Metrics   | scikit-learn |
-| Viz       | Matplotlib |
+* Multi-product supply chain modeling
+* Real-time dashboard (Streamlit / Dash)
+* Stochastic optimization under uncertainty
+* Edge disruption modeling
 
 ---
 
-## References
+## 👨‍💻 Author
 
-- Kipf & Welling (2017) — Semi-supervised Classification with GCNs
-- Ford & Fulkerson — Min-Cost Flow
-- PuLP documentation — https://coin-or.github.io/pulp/
+**Jay Rathod**
+M.Tech – Industrial Engineering & Management (IIT Kharagpur)
+
+---
+
+## ⭐ If you found this useful, consider giving a star!
