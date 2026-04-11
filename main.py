@@ -358,6 +358,5 @@ def main():
     print("\n[7/7] Results …")
     print_comparison(G, G_disrupted, flow_vals)
 
-
 if __name__ == "__main__":
     main()
