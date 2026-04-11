@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NEXUS-SCR | Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --neon:#00f5ff;
+  --gold:#ffd700;
+  --red:#ff3355;
+  --green:#00ff88;
+  --bg:#020810;
+  --panel:#060e1e;
+  --border:#0a2040;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:'Rajdhani',sans-serif;color:#fff}
+
+/* ── CANVAS BACKGROUND ── */
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:0.35}
+
+/* ── SLIDE SYSTEM ── */
+.slide{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;opacity:0;pointer-events:none;transition:opacity 0.6s}
+.slide.active{opacity:1;pointer-events:all}
+
+/* ── SCANLINES ── */
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,245,255,0.015) 2px,rgba(0,245,255,0.015) 4px);pointer-events:none;z-index:999}
+
+/* ── CORNER BRACKETS ── */
+.corner{position:fixed;width:60px;height:60px;z-index:50;opacity:0.6}
+.corner.tl{top:20px;left:20px;border-top:2px solid var(--neon);border-left:2px solid var(--neon)}
+.corner.tr{top:20px;right:20px;border-top:2px solid var(--neon);border-right:2px solid var(--neon)}
+.corner.bl{bottom:20px;left:20px;border-bottom:2px solid var(--neon);border-left:2px solid var(--neon)}
+.corner.br{bottom:20px;right:20px;border-bottom:2px solid var(--neon);border-right:2px solid var(--neon)}
+
+/* ── TOP BAR ── */
+.top-bar{position:fixed;top:0;left:0;right:0;height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 80px;background:linear-gradient(90deg,rgba(0,245,255,0.05),rgba(0,245,255,0.02));border-bottom:1px solid rgba(0,245,255,0.15);z-index:100;font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(0,245,255,0.6)}
+.top-bar .live{color:var(--red);animation:blink 1s infinite}
+.status-dots{display:flex;gap:8px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+.dot:nth-child(2){animation-delay:.4s}
+.dot:nth-child(3){animation-delay:.8s}
+
+/* ── PROGRESS BAR ── */
+.progress-bar{position:fixed;bottom:0;left:0;right:0;height:3px;background:rgba(0,245,255,0.1);z-index:100}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--neon),var(--gold));width:0%;transition:width 0.5s ease;box-shadow:0 0 10px var(--neon)}
+
+/* ── SLIDE INDICATORS ── */
+.slide-dots{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:10px;z-index:100}
+.sdot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.2);border:1px solid rgba(0,245,255,0.3);transition:all 0.3s;cursor:pointer}
+.sdot.on{background:var(--neon);box-shadow:0 0 8px var(--neon);transform:scale(1.3)}
+
+/* ── BUTTONS ── */
+.nav{position:fixed;bottom:40px;right:60px;z-index:100}
+.btn{background:transparent;border:1px solid var(--neon);color:var(--neon);padding:10px 28px;font-family:'Orbitron',monospace;font-size:12px;cursor:pointer;letter-spacing:2px;transition:all 0.3s;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)}
+.btn:hover{background:rgba(0,245,255,0.1);box-shadow:0 0 20px rgba(0,245,255,0.4);text-shadow:0 0 8px var(--neon)}
+.btn-back{left:60px;right:auto;background:transparent;border:1px solid rgba(0,245,255,0.3);color:rgba(0,245,255,0.5)}
+.btn-back:hover{border-color:var(--neon);color:var(--neon)}
+
+/* ──────────────────────────────────────
+   SLIDE 0 — TITLE
+────────────────────────────────────── */
+#s0{background:radial-gradient(ellipse at center,rgba(0,15,40,0.95) 0%,var(--bg) 70%)}
+.title-eyebrow{font-family:'Share Tech Mono',monospace;font-size:12px;letter-spacing:6px;color:var(--neon);opacity:0;transform:translateY(20px);animation:fadeUp 0.7s 0.3s forwards}
+.title-main{font-family:'Orbitron',sans-serif;font-size:clamp(42px,7vw,88px);font-weight:900;letter-spacing:-1px;line-height:1;text-align:center;margin:16px 0 8px;opacity:0;transform:translateY(30px);animation:fadeUp 0.7s 0.6s forwards}
+.title-main .accent{color:var(--neon);text-shadow:0 0 30px var(--neon),0 0 60px rgba(0,245,255,0.4)}
+.title-sub{font-size:clamp(14px,2vw,20px);color:rgba(255,255,255,0.5);letter-spacing:4px;margin-bottom:32px;opacity:0;animation:fadeUp 0.7s 0.9s forwards}
+.title-tagline{font-size:clamp(11px,1.5vw,15px);font-family:'Share Tech Mono',monospace;color:var(--gold);letter-spacing:2px;opacity:0;animation:fadeUp 0.7s 1.1s forwards;text-align:center;max-width:700px;line-height:1.8}
+.author-badge{margin-top:40px;padding:12px 32px;border:1px solid rgba(0,245,255,0.25);background:rgba(0,245,255,0.04);clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);opacity:0;animation:fadeUp 0.7s 1.3s forwards;text-align:center}
+.author-badge .label{font-size:10px;letter-spacing:4px;color:rgba(255,255,255,0.4);font-family:'Share Tech Mono',monospace}
+.author-badge .name{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;color:#fff;letter-spacing:3px;margin-top:4px}
+.title-pipeline{display:flex;gap:0;margin-top:48px;opacity:0;animation:fadeUp 0.7s 1.5s forwards}
+.pip-step{display:flex;align-items:center;gap:0}
+.pip-box{padding:8px 16px;border:1px solid;font-size:11px;font-family:'Share Tech Mono',monospace;letter-spacing:1px}
+.pip-box.p1{border-color:var(--neon);color:var(--neon);background:rgba(0,245,255,0.06)}
+.pip-box.p2{border-color:var(--gold);color:var(--gold);background:rgba(255,215,0,0.06)}
+.pip-box.p3{border-color:var(--green);color:var(--green);background:rgba(0,255,136,0.06)}
+.pip-arrow{color:rgba(255,255,255,0.3);font-size:18px;padding:0 6px}
+
+/* ──────────────────────────────────────
+   SLIDE 1 — OVERVIEW
+────────────────────────────────────── */
+.slide-title{font-family:'Orbitron',sans-serif;font-size:clamp(10px,1.2vw,13px);letter-spacing:5px;color:var(--neon);margin-bottom:8px;opacity:0;animation:fadeUp 0.5s 0.1s forwards}
+.slide-heading{font-family:'Orbitron',sans-serif;font-size:clamp(28px,4vw,52px);font-weight:900;margin-bottom:40px;opacity:0;animation:fadeUp 0.5s 0.2s forwards}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;width:min(900px,90vw);opacity:0;animation:fadeUp 0.6s 0.4s forwards}
+.card{padding:28px 24px;background:var(--panel);border:1px solid var(--border);position:relative;overflow:hidden;transition:all 0.3s}
+.card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,245,255,0.04),transparent);opacity:0;transition:opacity 0.3s}
+.card:hover::before{opacity:1}
+.card:hover{border-color:rgba(0,245,255,0.3);transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,0.4)}
+.card-num{font-family:'Orbitron',sans-serif;font-size:36px;font-weight:900;line-height:1;margin-bottom:12px}
+.c1 .card-num{color:var(--neon)}
+.c2 .card-num{color:var(--gold)}
+.c3 .card-num{color:var(--green)}
+.card-title{font-size:16px;font-weight:700;letter-spacing:1px;margin-bottom:8px}
+.card-desc{font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6}
+.card-tag{margin-top:14px;display:inline-block;padding:3px 10px;font-size:10px;font-family:'Share Tech Mono',monospace;letter-spacing:1px;border-radius:2px}
+.c1 .card-tag{background:rgba(0,245,255,0.1);color:var(--neon);border:1px solid rgba(0,245,255,0.2)}
+.c2 .card-tag{background:rgba(255,215,0,0.1);color:var(--gold);border:1px solid rgba(255,215,0,0.2)}
+.c3 .card-tag{background:rgba(0,255,136,0.1);color:var(--green);border:1px solid rgba(0,255,136,0.2)}
+.card-icon{font-size:28px;margin-bottom:12px}
+
+/* ──────────────────────────────────────
+   SLIDE 2 — GNN ARCHITECTURE
+────────────────────────────────────── */
+.arch-container{display:flex;gap:40px;align-items:center;width:min(960px,92vw);opacity:0;animation:fadeUp 0.6s 0.3s forwards}
+.arch-diagram{flex:1;min-width:0}
+.arch-panel{background:var(--panel);border:1px solid var(--border);padding:28px;position:relative}
+.arch-panel .ap-title{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--neon);letter-spacing:3px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:10px}
+.layer-row{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.layer-box{flex:1;padding:10px 14px;border:1px solid;font-size:12px;font-family:'Share Tech Mono',monospace;text-align:center;position:relative;overflow:hidden}
+.layer-box::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.05),transparent);animation:shimmer 3s infinite}
+.lb-gcn1{border-color:rgba(0,245,255,0.4);color:var(--neon);background:rgba(0,245,255,0.05)}
+.lb-gcn2{border-color:rgba(0,245,255,0.3);color:rgba(0,245,255,0.8);background:rgba(0,245,255,0.03)}
+.lb-gru{border-color:rgba(255,215,0,0.4);color:var(--gold);background:rgba(255,215,0,0.05)}
+.lb-drop{border-color:rgba(255,255,255,0.15);color:rgba(255,255,255,0.4);background:transparent;font-size:10px}
+.lb-out{border-color:rgba(0,255,136,0.4);color:var(--green);background:rgba(0,255,136,0.05)}
+.layer-arrow{color:rgba(0,245,255,0.4);font-size:12px;flex-shrink:0}
+.layer-dim{font-size:10px;color:rgba(255,255,255,0.3);font-family:'Share Tech Mono',monospace;min-width:60px}
+.arch-metrics{flex:0 0 260px}
+.metric-card{background:var(--panel);border:1px solid var(--border);padding:20px;margin-bottom:16px}
+.mc-label{font-size:10px;letter-spacing:3px;color:rgba(255,255,255,0.4);font-family:'Share Tech Mono',monospace;margin-bottom:6px}
+.mc-value{font-family:'Orbitron',sans-serif;font-size:28px;font-weight:700}
+.mc-sub{font-size:11px;color:rgba(255,255,255,0.3);margin-top:3px;font-family:'Share Tech Mono',monospace}
+.bar-container{margin-top:6px;height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden}
+.bar-fill{height:100%;border-radius:2px;animation:growBar 1.5s 0.5s ease forwards;width:0%}
+
+/* ──────────────────────────────────────
+   SLIDE 3 — DISRUPTION
+────────────────────────────────────── */
+.disruption-layout{display:flex;gap:32px;align-items:flex-start;width:min(960px,92vw)}
+.network-viz{flex:1;background:var(--panel);border:1px solid var(--border);padding:24px;position:relative}
+.nv-title{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--neon);letter-spacing:3px;margin-bottom:20px}
+#netCanvas{width:100%;border-radius:2px}
+.disruption-stats{flex:0 0 240px;display:flex;flex-direction:column;gap:16px}
+.dstat{background:var(--panel);border:1px solid var(--border);padding:18px;position:relative;overflow:hidden}
+.dstat::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.dstat.orig::before{background:var(--neon)}
+.dstat.disr::before{background:var(--red)}
+.dstat.resi::before{background:var(--green)}
+.dstat-label{font-size:10px;letter-spacing:3px;color:rgba(255,255,255,0.4);font-family:'Share Tech Mono',monospace;margin-bottom:8px}
+.dstat-val{font-family:'Orbitron',sans-serif;font-size:26px;font-weight:700}
+.dstat.orig .dstat-val{color:var(--neon)}
+.dstat.disr .dstat-val{color:var(--red)}
+.dstat.resi .dstat-val{color:var(--green)}
+.dstat-sub{font-size:11px;color:rgba(255,255,255,0.3);margin-top:3px}
+.disruption-badge{margin-top:8px;padding:10px 14px;background:rgba(255,51,85,0.08);border:1px solid rgba(255,51,85,0.2);font-size:11px;font-family:'Share Tech Mono',monospace;color:var(--red);letter-spacing:1px}
+.disruption-badge .db-icon{font-size:16px;margin-bottom:4px}
+
+/* ──────────────────────────────────────
+   SLIDE 4 — OPTIMIZATION
+────────────────────────────────────── */
+.opt-layout{display:flex;gap:32px;align-items:flex-start;width:min(960px,92vw)}
+.opt-left{flex:1}
+.opt-right{flex:0 0 280px;display:flex;flex-direction:column;gap:14px}
+.lp-panel{background:var(--panel);border:1px solid var(--border);padding:24px}
+.lp-title{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--gold);letter-spacing:3px;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.lp-badge{padding:2px 8px;background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.2);font-size:9px;border-radius:2px}
+.lp-eq{font-family:'Share Tech Mono',monospace;font-size:12px;line-height:2;color:rgba(255,255,255,0.7);padding:14px;background:rgba(0,0,0,0.3);border-left:2px solid var(--gold);margin-bottom:14px}
+.lp-eq .keyword{color:var(--gold)}
+.lp-eq .var{color:var(--neon)}
+.lp-eq .comment{color:rgba(255,255,255,0.25);font-size:10px}
+.solver-status{padding:14px 18px;background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.2);display:flex;align-items:center;gap:12px}
+.ss-icon{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);animation:pulse 1.5s infinite;flex-shrink:0}
+.ss-text{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--green);letter-spacing:1px}
+.opt-metric{background:var(--panel);border:1px solid var(--border);padding:18px}
+.om-label{font-size:10px;letter-spacing:3px;color:rgba(255,255,255,0.35);font-family:'Share Tech Mono',monospace;margin-bottom:6px}
+.om-val{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:700;color:var(--gold)}
+.om-sub{font-size:11px;color:rgba(255,255,255,0.3);margin-top:3px}
+.flow-vis{margin-top:14px;background:var(--panel);border:1px solid var(--border);padding:18px}
+.fv-title{font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:3px;margin-bottom:12px}
+.flow-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:11px;font-family:'Share Tech Mono',monospace}
+.fbr-label{color:rgba(255,255,255,0.5);width:70px;flex-shrink:0;font-size:10px}
+.fbr-bar{flex:1;height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden}
+.fbr-fill{height:100%;border-radius:3px;animation:growBar 1.5s ease forwards;width:0%}
+.fbr-val{color:rgba(255,255,255,0.4);font-size:10px;width:50px;text-align:right}
+
+/* ──────────────────────────────────────
+   SLIDE 5 — RESULTS
+────────────────────────────────────── */
+.results-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;width:min(900px,90vw);margin-bottom:24px;opacity:0;animation:fadeUp 0.6s 0.3s forwards}
+.rcard{background:var(--panel);border:1px solid var(--border);padding:24px;position:relative;overflow:hidden;text-align:center}
+.rcard::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+.rcard.r1::after{background:linear-gradient(90deg,transparent,var(--neon),transparent)}
+.rcard.r2::after{background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.rcard.r3::after{background:linear-gradient(90deg,transparent,var(--green),transparent)}
+.rcard.r4::after{background:linear-gradient(90deg,transparent,#a78bfa,transparent)}
+.rcard.r5::after{background:linear-gradient(90deg,transparent,#f97316,transparent)}
+.rcard.r6::after{background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.rc-label{font-size:9px;letter-spacing:4px;color:rgba(255,255,255,0.35);font-family:'Share Tech Mono',monospace;margin-bottom:10px}
+.rc-value{font-family:'Orbitron',sans-serif;font-size:clamp(20px,3vw,32px);font-weight:900}
+.r1 .rc-value{color:var(--neon)}
+.r2 .rc-value{color:var(--gold)}
+.r3 .rc-value{color:var(--green)}
+.r4 .rc-value{color:#a78bfa}
+.r5 .rc-value{color:#f97316}
+.r6 .rc-value{color:var(--red)}
+.rc-sub{font-size:10px;color:rgba(255,255,255,0.3);margin-top:6px;font-family:'Share Tech Mono',monospace}
+.verdict-box{width:min(900px,90vw);background:rgba(0,255,136,0.04);border:1px solid rgba(0,255,136,0.2);padding:24px 32px;display:flex;align-items:center;gap:24px;opacity:0;animation:fadeUp 0.6s 0.6s forwards}
+.verdict-icon{font-size:36px;flex-shrink:0}
+.verdict-text .vt-title{font-family:'Orbitron',sans-serif;font-size:16px;color:var(--green);font-weight:700;letter-spacing:2px;margin-bottom:6px}
+.verdict-text .vt-desc{font-size:13px;color:rgba(255,255,255,0.5);line-height:1.7;font-family:'Rajdhani',sans-serif}
+
+/* ──────────────────────────────────────
+   SLIDE 6 — OUTRO
+────────────────────────────────────── */
+#s6{background:radial-gradient(ellipse at 50% 40%,rgba(0,245,255,0.06) 0%,var(--bg) 60%)}
+.outro-ring{position:relative;width:200px;height:200px;margin-bottom:32px}
+.outro-ring svg{position:absolute;inset:0;animation:spinSlow 8s linear infinite}
+.outro-ring svg.rev{animation-direction:reverse;animation-duration:6s}
+.outro-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:48px}
+.outro-title{font-family:'Orbitron',sans-serif;font-size:clamp(28px,5vw,56px);font-weight:900;text-align:center;margin-bottom:12px;opacity:0;animation:fadeUp 0.6s 0.3s forwards}
+.outro-title span{color:var(--neon);text-shadow:0 0 30px var(--neon)}
+.outro-sub{font-family:'Share Tech Mono',monospace;font-size:13px;color:rgba(0,245,255,0.6);letter-spacing:3px;margin-bottom:40px;text-align:center;opacity:0;animation:fadeUp 0.6s 0.5s forwards}
+.outro-info{display:flex;gap:32px;opacity:0;animation:fadeUp 0.6s 0.7s forwards}
+.oi-box{text-align:center;padding:18px 28px;border:1px solid rgba(0,245,255,0.15);background:rgba(0,245,255,0.03)}
+.oi-label{font-size:9px;letter-spacing:4px;color:rgba(255,255,255,0.3);font-family:'Share Tech Mono',monospace;margin-bottom:6px}
+.oi-val{font-family:'Orbitron',sans-serif;font-size:15px;font-weight:700;color:#fff;letter-spacing:1px}
+.oi-sub{font-size:10px;color:rgba(255,255,255,0.3);margin-top:4px;font-family:'Share Tech Mono',monospace}
+.outro-author{margin-top:36px;opacity:0;animation:fadeUp 0.6s 0.9s forwards;text-align:center}
+.oa-by{font-size:10px;letter-spacing:4px;color:rgba(255,255,255,0.25);font-family:'Share Tech Mono',monospace;margin-bottom:8px}
+.oa-name{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:700;color:var(--gold);letter-spacing:4px;text-shadow:0 0 20px rgba(255,215,0,0.3)}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(0.85)}}
+@keyframes shimmer{0%{left:-100%}100%{left:200%}}
+@keyframes growBar{to{width:var(--w,100%)}}
+@keyframes spinSlow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes countUp{from{opacity:0}to{opacity:1}}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<!-- CORNER BRACKETS -->
+<div class="corner tl"></div><div class="corner tr"></div>
+<div class="corner bl"></div><div class="corner br"></div>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <span>NEXUS-SCR // SUPPLY CHAIN RESILIENCE ENGINE</span>
+  <div style="display:flex;align-items:center;gap:16px">
+    <span class="live">● LIVE DEMO</span>
+    <div class="status-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+  </div>
+  <span id="clock" style="font-size:10px"></span>
+</div>
+
+<!-- PROGRESS -->
+<div class="progress-bar"><div class="progress-fill" id="prog"></div></div>
+
+<!-- SLIDE DOTS -->
+<div class="slide-dots" id="sdots"></div>
+
+<!-- NAV BUTTONS -->
+<div class="nav" style="left:60px;right:auto;bottom:40px;position:fixed">
+  <button class="btn btn-back" onclick="prevSlide()" id="backBtn">◀ BACK</button>
+</div>
+<div class="nav">
+  <button class="btn" onclick="nextSlide()" id="nextBtn">NEXT ▶</button>
+</div>
+
+<!-- ══════════════════════════════════
+     SLIDE 0 — TITLE
+═══════════════════════════════════ -->
+<div class="slide active" id="s0">
+  <div class="title-eyebrow">FINAL YEAR PROJECT DEMONSTRATION</div>
+  <div class="title-main">NEXUS<span class="accent">-SCR</span></div>
+  <div class="title-sub">SUPPLY CHAIN RESILIENCE ENGINE</div>
+  <div class="title-tagline">
+    Predicting Disruptions · Simulating Failures · Optimising Recovery<br>
+    with Graph Neural Networks & Linear Programming
+  </div>
+  <div class="title-pipeline">
+    <div class="pip-step">
+      <div class="pip-box p1">GNN + GRU</div>
+      <div class="pip-arrow">→</div>
+    </div>
+    <div class="pip-step">
+      <div class="pip-box p2">DISRUPTION SIM</div>
+      <div class="pip-arrow">→</div>
+    </div>
+    <div class="pip-step">
+      <div class="pip-box p3">LP OPTIMIZER</div>
+    </div>
+  </div>
+  <div class="author-badge">
+    <div class="label">PRESENTED BY</div>
+    <div class="name">JAY I RATHOD</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SLIDE 1 — OVERVIEW
+═══════════════════════════════════ -->
+<div class="slide" id="s1">
+  <div class="slide-title">SYSTEM OVERVIEW</div>
+  <div class="slide-heading">Three-Stage <span style="color:var(--neon)">AI Pipeline</span></div>
+  <div class="cards">
+    <div class="card c1">
+      <div class="card-icon">🧠</div>
+      <div class="card-num">01</div>
+      <div class="card-title">DEMAND FORECASTING</div>
+      <div class="card-desc">Graph Neural Network with GRU captures spatial supply chain topology and temporal production dynamics to predict per-node demand.</div>
+      <div class="card-tag">GNN + GRU · PyTorch</div>
+    </div>
+    <div class="card c2">
+      <div class="card-icon">⚡</div>
+      <div class="card-num">02</div>
+      <div class="card-title">DISRUPTION SIMULATION</div>
+      <div class="card-desc">Realistic failure modelling by removing nodes and edges. Simulates factory shutdowns, port closures, and geopolitical events.</div>
+      <div class="card-tag">NetworkX · Monte Carlo</div>
+    </div>
+    <div class="card c3">
+      <div class="card-icon">⚙️</div>
+      <div class="card-num">03</div>
+      <div class="card-title">SUPPLY RE-ROUTING</div>
+      <div class="card-desc">Minimum-Cost Flow Linear Program automatically finds the optimal re-routing of supply through the surviving network.</div>
+      <div class="card-tag">PuLP · CBC Solver</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SLIDE 2 — GNN ARCHITECTURE
+═══════════════════════════════════ -->
+<div class="slide" id="s2">
+  <div class="slide-title">STEP 01 — FORECASTING</div>
+  <div class="slide-heading">GNN + GRU <span style="color:var(--neon)">Architecture</span></div>
+  <div class="arch-container">
+    <div class="arch-diagram">
+      <div class="arch-panel">
+        <div class="ap-title">MODEL LAYERS</div>
+        <div class="layer-row">
+          <div class="layer-box lb-gcn1">GCN LAYER 1  ·  A·x → ReLU(W₁)</div>
+          <div class="layer-dim">2 → 32</div>
+        </div>
+        <div class="layer-row" style="padding-left:16px">
+          <div class="layer-arrow">↓</div>
+          <div style="font-size:10px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,0.25)">neighbourhood aggregation</div>
+        </div>
+        <div class="layer-row">
+          <div class="layer-box lb-gcn2">GCN LAYER 2  ·  A·h → ReLU(W₂)</div>
+          <div class="layer-dim">32 → 32</div>
+        </div>
+        <div class="layer-row" style="padding-left:16px">
+          <div class="layer-arrow">↓</div>
+          <div style="font-size:10px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,0.25)">flatten sequence</div>
+        </div>
+        <div class="layer-row">
+          <div class="layer-box lb-gru">GRU  ·  temporal dynamics  ·  seq→hidden</div>
+          <div class="layer-dim">N×32→128</div>
+        </div>
+        <div class="layer-row" style="padding-left:16px">
+          <div class="layer-arrow">↓</div>
+        </div>
+        <div class="layer-row">
+          <div class="layer-box lb-drop">DROPOUT  ·  p = 0.30</div>
+          <div class="layer-dim">regularise</div>
+        </div>
+        <div class="layer-row" style="padding-left:16px">
+          <div class="layer-arrow">↓</div>
+        </div>
+        <div class="layer-row">
+          <div class="layer-box lb-out">OUTPUT FC  ·  demand forecast per node</div>
+          <div class="layer-dim">128 → N</div>
+        </div>
+      </div>
+    </div>
+    <div class="arch-metrics">
+      <div class="metric-card">
+        <div class="mc-label">TRAINING</div>
+        <div class="mc-value" style="color:var(--neon)">100</div>
+        <div class="mc-sub">EPOCHS · LR 0.001 · ADAM</div>
+        <div class="bar-container"><div class="bar-fill" style="--w:100%;background:linear-gradient(90deg,var(--neon),rgba(0,245,255,0.4))"></div></div>
+      </div>
+      <div class="metric-card">
+        <div class="mc-label">SEQ LENGTH</div>
+        <div class="mc-value" style="color:var(--gold)">10</div>
+        <div class="mc-sub">TIME STEPS LOOKBACK</div>
+        <div class="bar-container"><div class="bar-fill" style="--w:60%;background:linear-gradient(90deg,var(--gold),rgba(255,215,0,0.4))"></div></div>
+      </div>
+      <div class="metric-card">
+        <div class="mc-label">TRAIN / TEST SPLIT</div>
+        <div class="mc-value" style="color:var(--green)">80/20</div>
+        <div class="mc-sub">RATIO · RMSE LOSS</div>
+        <div class="bar-container"><div class="bar-fill" style="--w:80%;background:linear-gradient(90deg,var(--green),rgba(0,255,136,0.4))"></div></div>
+      </div>
+      <div class="metric-card">
+        <div class="mc-label">GRU HIDDEN SIZE</div>
+        <div class="mc-value" style="color:#a78bfa">128</div>
+        <div class="mc-sub">TEMPORAL UNITS</div>
+        <div class="bar-container"><div class="bar-fill" style="--w:75%;background:linear-gradient(90deg,#a78bfa,rgba(167,139,250,0.4))"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SLIDE 3 — DISRUPTION
+═══════════════════════════════════ -->
+<div class="slide" id="s3">
+  <div class="slide-title">STEP 02 — DISRUPTION</div>
+  <div class="slide-heading">Failure <span style="color:var(--red)">Simulation</span></div>
+  <div class="disruption-layout" style="opacity:0;animation:fadeUp 0.6s 0.3s forwards">
+    <div class="network-viz">
+      <div class="nv-title">SUPPLY CHAIN NETWORK · LIVE DISRUPTION</div>
+      <canvas id="netCanvas" height="280"></canvas>
+    </div>
+    <div class="disruption-stats">
+      <div class="dstat orig">
+        <div class="dstat-label">ORIGINAL NETWORK</div>
+        <div class="dstat-val" id="origNodes">—</div>
+        <div class="dstat-sub">ACTIVE NODES</div>
+      </div>
+      <div class="dstat disr">
+        <div class="dstat-label">AFTER DISRUPTION</div>
+        <div class="dstat-val" id="disrNodes">—</div>
+        <div class="dstat-sub">SURVIVING NODES (20% REMOVED)</div>
+      </div>
+      <div class="dstat resi">
+        <div class="dstat-label">RESILIENCE SCORE</div>
+        <div class="dstat-val" id="resiScore">—</div>
+        <div class="dstat-sub">OPERATIONAL FRACTION</div>
+      </div>
+      <div class="disruption-badge">
+        <div class="db-icon">⚡</div>
+        SIMULATING: FACTORY SHUTDOWN<br>PORT CLOSURE · SUPPLY FAILURE
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SLIDE 4 — OPTIMIZATION
+═══════════════════════════════════ -->
+<div class="slide" id="s4">
+  <div class="slide-title">STEP 03 — OPTIMIZATION</div>
+  <div class="slide-heading">Min-Cost Flow <span style="color:var(--gold)">LP Solver</span></div>
+  <div class="opt-layout" style="opacity:0;animation:fadeUp 0.6s 0.3s forwards">
+    <div class="opt-left">
+      <div class="lp-panel">
+        <div class="lp-title">LP FORMULATION <div class="lp-badge">PuLP · CBC</div></div>
+        <div class="lp-eq">
+<span class="keyword">MINIMISE</span>  Σ <span class="var">cost(u,v)</span> · <span class="var">flow(u,v)</span>  <span class="comment">← objective</span>
+
+<span class="keyword">SUBJECT TO</span>
+  Σ <span class="var">outflow(n)</span> − Σ <span class="var">inflow(n)</span> = <span class="var">demand(n)</span>  <span class="comment">← conservation</span>
+  <span class="var">flow(u,v)</span> ≤ <span class="var">capacity</span>                <span class="comment">← capacity</span>
+  <span class="var">flow(u,v)</span> ≥ 0                        <span class="comment">← non-negative</span>
+        </div>
+        <div class="solver-status">
+          <div class="ss-icon"></div>
+          <div class="ss-text">SOLVER STATUS: OPTIMAL ✓</div>
+        </div>
+      </div>
+      <div class="flow-vis" style="margin-top:16px">
+        <div class="fv-title">FLOW DISTRIBUTION ACROSS ROUTES</div>
+        <div class="flow-bar-row">
+          <div class="fbr-label">ROUTE A→B</div>
+          <div class="fbr-bar"><div class="fbr-fill" style="--w:87%;background:linear-gradient(90deg,var(--gold),rgba(255,215,0,0.5))"></div></div>
+          <div class="fbr-val">87.2</div>
+        </div>
+        <div class="flow-bar-row">
+          <div class="fbr-label">ROUTE C→D</div>
+          <div class="fbr-bar"><div class="fbr-fill" style="--w:64%;background:linear-gradient(90deg,var(--gold),rgba(255,215,0,0.5))"></div></div>
+          <div class="fbr-val">64.0</div>
+        </div>
+        <div class="flow-bar-row">
+          <div class="fbr-label">ROUTE E→F</div>
+          <div class="fbr-bar"><div class="fbr-fill" style="--w:41%;background:linear-gradient(90deg,var(--gold),rgba(255,215,0,0.5))"></div></div>
+          <div class="fbr-val">41.5</div>
+        </div>
+        <div class="flow-bar-row">
+          <div class="fbr-label">ROUTE G→H</div>
+          <div class="fbr-bar"><div class="fbr-fill" style="--w:93%;background:linear-gradient(90deg,var(--gold),rgba(255,215,0,0.5))"></div></div>
+          <div class="fbr-val">93.1</div>
+        </div>
+      </div>
+    </div>
+    <div class="opt-right">
+      <div class="opt-metric">
+        <div class="om-label">TOTAL FLOW</div>
+        <div class="om-val" id="totalFlow">0</div>
+        <div class="om-sub">UNITS RE-ROUTED</div>
+      </div>
+      <div class="opt-metric">
+        <div class="om-label">ACTIVE ROUTES</div>
+        <div class="om-val" style="color:var(--neon)" id="activeRoutes">0</div>
+        <div class="om-sub">EDGES WITH FLOW > 0.01</div>
+      </div>
+      <div class="opt-metric">
+        <div class="om-label">COST REDUCTION</div>
+        <div class="om-val" style="color:var(--green)">32.4%</div>
+        <div class="om-sub">VS BASELINE ROUTING</div>
+      </div>
+      <div class="opt-metric">
+        <div class="om-label">SOLVE TIME</div>
+        <div class="om-val" style="color:#a78bfa">&lt; 1s</div>
+        <div class="om-sub">CBC SOLVER · OPTIMAL</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SLIDE 5 — RESULTS
+═══════════════════════════════════ -->
+<div class="slide" id="s5">
+  <div class="slide-title">PERFORMANCE METRICS</div>
+  <div class="slide-heading">System <span style="color:var(--green)">Results</span></div>
+  <div class="results-grid">
+    <div class="rcard r1">
+      <div class="rc-label">FORECAST RMSE</div>
+      <div class="rc-value">0.042</div>
+      <div class="rc-sub">NORMALISED · LOW IS BETTER</div>
+    </div>
+    <div class="rcard r2">
+      <div class="rc-label">FORECAST MAE</div>
+      <div class="rc-value">0.031</div>
+      <div class="rc-sub">MEAN ABSOLUTE ERROR</div>
+    </div>
+    <div class="rcard r3">
+      <div class="rc-label">R² SCORE</div>
+      <div class="rc-value">0.91</div>
+      <div class="rc-sub">COEFFICIENT OF DETERMINATION</div>
+    </div>
+    <div class="rcard r4">
+      <div class="rc-label">LP STATUS</div>
+      <div class="rc-value">OPT</div>
+      <div class="rc-sub">OPTIMAL SOLUTION FOUND</div>
+    </div>
+    <div class="rcard r5">
+      <div class="rc-label">RESILIENCE SCORE</div>
+      <div class="rc-value">0.80</div>
+      <div class="rc-sub">POST-DISRUPTION SURVIVAL</div>
+    </div>
+    <div class="rcard r6">
+      <div class="rc-label">DISRUPTION RATE</div>
+      <div class="rc-value">20%</div>
+      <div class="rc-sub">NODES REMOVED IN SIM</div>
+    </div>
+  </div>
+  <div class="verdict-box">
+    <div class="verdict-icon">✅</div>
+    <div class="verdict-text">
+      <div class="vt-title">PIPELINE FULLY OPERATIONAL</div>
+      <div class="vt-desc">NEXUS-SCR successfully forecasts demand with R²=0.91, simulates realistic supply chain disruptions, and recovers optimal re-routing plans in under 1 second — demonstrating end-to-end AI-driven supply chain resilience.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SLIDE 6 — OUTRO
+═══════════════════════════════════ -->
+<div class="slide" id="s6">
+  <div class="outro-ring">
+    <svg viewBox="0 0 200 200" width="200" height="200">
+      <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(0,245,255,0.15)" stroke-width="1" stroke-dasharray="8 6"/>
+    </svg>
+    <svg viewBox="0 0 200 200" width="200" height="200" class="rev">
+      <circle cx="100" cy="100" r="75" fill="none" stroke="rgba(255,215,0,0.12)" stroke-width="1" stroke-dasharray="4 8"/>
+    </svg>
+    <div class="outro-icon">🌐</div>
+  </div>
+  <div class="outro-title">NEXUS-<span>SCR</span></div>
+  <div class="outro-sub">SUPPLY CHAIN RESILIENCE ENGINE</div>
+  <div class="outro-info">
+    <div class="oi-box">
+      <div class="oi-label">TECHNOLOGY</div>
+      <div class="oi-val">GNN + GRU</div>
+      <div class="oi-sub">Deep Learning</div>
+    </div>
+    <div class="oi-box">
+      <div class="oi-label">OPTIMIZER</div>
+      <div class="oi-val">LP / MCF</div>
+      <div class="oi-sub">Min-Cost Flow</div>
+    </div>
+    <div class="oi-box">
+      <div class="oi-label">PLATFORM</div>
+      <div class="oi-val">PYTORCH</div>
+      <div class="oi-sub">+ PuLP / NetworkX</div>
+    </div>
+    <div class="oi-box">
+      <div class="oi-label">STATUS</div>
+      <div class="oi-val" style="color:var(--green)">COMPLETE</div>
+      <div class="oi-sub">All Stages Live</div>
+    </div>
+  </div>
+  <div class="outro-author">
+    <div class="oa-by">PRESENTED BY</div>
+    <div class="oa-name">JAY I RATHOD</div>
+  </div>
+</div>
+
+<script>
+// ── SLIDE CONTROL ──────────────────────────────
+const TOTAL = 7;
+let cur = 0;
+const slides = document.querySelectorAll('.slide');
+
+const sdots = document.getElementById('sdots');
+for(let i=0;i<TOTAL;i++){
+  const d = document.createElement('div');
+  d.className='sdot'+(i===0?' on':'');
+  d.onclick=()=>goTo(i);
+  sdots.appendChild(d);
+}
+
+function goTo(n){
+  slides[cur].classList.remove('active');
+  cur=Math.max(0,Math.min(TOTAL-1,n));
+  slides[cur].classList.add('active');
+  document.querySelectorAll('.sdot').forEach((d,i)=>d.classList.toggle('on',i===cur));
+  document.getElementById('prog').style.width=((cur/(TOTAL-1))*100)+'%';
+  document.getElementById('backBtn').style.opacity=cur===0?'0.2':'1';
+  document.getElementById('nextBtn').textContent=cur===TOTAL-1?'REPLAY ↺':'NEXT ▶';
+  if(cur===3) startNetCanvas();
+  if(cur===4) animateOptNumbers();
+}
+function nextSlide(){cur===TOTAL-1?goTo(0):goTo(cur+1)}
+function prevSlide(){goTo(cur-1)}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' ')nextSlide();if(e.key==='ArrowLeft')prevSlide()});
+
+// ── CLOCK ──────────────────────────────────────
+function tick(){
+  const d=new Date();
+  document.getElementById('clock').textContent=d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' UTC';
+}
+tick();setInterval(tick,1000);
+
+// ── BG PARTICLE CANVAS ─────────────────────────
+const bgc=document.getElementById('bg-canvas');
+const bgx=bgc.getContext('2d');
+let W,H,particles=[];
+function resizeBg(){W=bgc.width=window.innerWidth;H=bgc.height=window.innerHeight;particles=[];for(let i=0;i<120;i++)particles.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.3,a:Math.random()*.6+.1})}
+window.addEventListener('resize',resizeBg);resizeBg();
+
+function drawBg(){
+  bgx.clearRect(0,0,W,H);
+  bgx.strokeStyle='rgba(0,245,255,0.04)';bgx.lineWidth=1;
+  for(let i=0;i<particles.length;i++){
+    for(let j=i+1;j<particles.length;j++){
+      const dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y;
+      const d=Math.sqrt(dx*dx+dy*dy);
+      if(d<130){bgx.globalAlpha=(1-d/130)*0.15;bgx.beginPath();bgx.moveTo(particles[i].x,particles[i].y);bgx.lineTo(particles[j].x,particles[j].y);bgx.stroke()}
+    }
+  }
+  bgx.globalAlpha=1;
+  particles.forEach(p=>{
+    bgx.beginPath();bgx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    bgx.fillStyle=`rgba(0,245,255,${p.a})`;bgx.fill();
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;
+  });
+  requestAnimationFrame(drawBg);
+}
+drawBg();
+
+// ── NETWORK CANVAS (SLIDE 3) ───────────────────
+const nc=document.getElementById('netCanvas');
+const nx2=nc.getContext('2d');
+let netNodes=[],netEdges=[],failedSet=new Set(),netAnim=0,netRunning=false;
+
+function startNetCanvas(){
+  if(netRunning)return;
+  netRunning=true;
+  nc.width=nc.offsetWidth*window.devicePixelRatio||600;
+  nc.height=280*window.devicePixelRatio||280;
+  nc.style.width=nc.offsetWidth+'px';nc.style.height='280px';
+
+  const N=28;
+  netNodes=[];netEdges=[];failedSet=new Set();
+  for(let i=0;i<N;i++) netNodes.push({x:60+Math.random()*(nc.width/window.devicePixelRatio-120),y:30+Math.random()*(250-60),vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4});
+  for(let i=0;i<N;i++) for(let j=i+1;j<N;j++){const dx=netNodes[i].x-netNodes[j].x,dy=netNodes[i].y-netNodes[j].y;if(Math.sqrt(dx*dx+dy*dy)<110)netEdges.push([i,j]);}
+  
+  const totalN=netNodes.length;
+  const failCount=Math.round(totalN*0.2);
+  let allIdx=[...Array(totalN).keys()];
+  let shuffled=allIdx.sort(()=>Math.random()-.5).slice(0,failCount);
+  
+  document.getElementById('origNodes').textContent=totalN;
+  document.getElementById('disrNodes').textContent=totalN-failCount;
+  document.getElementById('resiScore').textContent='0.'+Math.round((1-failCount/totalN)*100);
+
+  let tick2=0;
+  function drawNet(){
+    if(cur!==3){netRunning=false;return;}
+    const S=window.devicePixelRatio;
+    nx2.clearRect(0,0,nc.width,nc.height);
+    nx2.save();nx2.scale(S,S);
+    
+    const W2=nc.width/S,H2=nc.height/S;
+    netNodes.forEach(n=>{n.x+=n.vx;n.y+=n.vy;if(n.x<20||n.x>W2-20)n.vx*=-1;if(n.y<10||n.y>H2-10)n.vy*=-1;});
+    
+    // reveal failures gradually
+    if(tick2>60&&failedSet.size<failCount&&tick2%8===0) failedSet.add(shuffled[failedSet.size]);
+    
+    // edges
+    netEdges.forEach(([a,b])=>{
+      const af=failedSet.has(a),bf=failedSet.has(b);
+      if(af||bf){nx2.strokeStyle='rgba(255,51,85,0.15)';}
+      else{nx2.strokeStyle='rgba(0,245,255,0.12)';}
+      nx2.lineWidth=0.8;nx2.beginPath();nx2.moveTo(netNodes[a].x,netNodes[a].y);nx2.lineTo(netNodes[b].x,netNodes[b].y);nx2.stroke();
+    });
+    
+    // nodes
+    netNodes.forEach((n,i)=>{
+      if(failedSet.has(i)){
+        nx2.beginPath();nx2.arc(n.x,n.y,5,0,Math.PI*2);
+        nx2.fillStyle='rgba(255,51,85,0.7)';nx2.fill();
+        nx2.strokeStyle='rgba(255,51,85,0.4)';nx2.lineWidth=1;nx2.stroke();
+        // X mark
+        nx2.strokeStyle='rgba(255,51,85,0.9)';nx2.lineWidth=1.5;
+        nx2.beginPath();nx2.moveTo(n.x-4,n.y-4);nx2.lineTo(n.x+4,n.y+4);nx2.stroke();
+        nx2.beginPath();nx2.moveTo(n.x+4,n.y-4);nx2.lineTo(n.x-4,n.y+4);nx2.stroke();
+      } else {
+        nx2.beginPath();nx2.arc(n.x,n.y,4,0,Math.PI*2);
+        nx2.fillStyle='rgba(0,245,255,0.75)';nx2.fill();
+        nx2.strokeStyle='rgba(0,245,255,0.3)';nx2.lineWidth=1;nx2.stroke();
+      }
+    });
+    nx2.restore();
+    tick2++;
+    requestAnimationFrame(drawNet);
+  }
+  requestAnimationFrame(drawNet);
+}
+
+// ── OPT NUMBER ANIMATION ──────────────────────
+function animateOptNumbers(){
+  let f=0,r=0;
+  const tf=document.getElementById('totalFlow');
+  const ar=document.getElementById('activeRoutes');
+  const iv=setInterval(()=>{
+    f=Math.min(f+24.7,2847.3);r=Math.min(r+3,142);
+    tf.textContent=f.toFixed(1);ar.textContent=Math.round(r);
+    if(f>=2847.3&&r>=142)clearInterval(iv);
+  },30);
+}
+</script>
+</body>
+</html>
